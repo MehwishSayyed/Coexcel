@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports - Reliance EMS</title>
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prop-types/15.8.1/prop-types.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-shape/3.2.0/d3-shape.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/recharts/2.12.7/Recharts.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+    <script>
+        // Fallback check - if Recharts still isn't on window, show a clear message instead of a silent crash
+        window.addEventListener('DOMContentLoaded', () => {
+            if (typeof Recharts === 'undefined') {
+                document.getElementById('root').innerHTML =
+                    '<div style="color:white; text-align:center; padding:60px; font-size:1.1em;">' +
+                    '⚠️ Charts library failed to load from CDN. Check your internet connection and refresh the page.' +
+                    '</div>';
+            }
+        });
+    </script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container { max-width: 1400px; margin: 0 auto; }
+
+        header {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        h1 { color: #667eea; font-size: 1.8em; }
+
+        .back-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .back-link:hover { text-decoration: underline; }
+
+        .header-right { display: flex; gap: 15px; align-items: center; }
+
+        .role-badge {
+            background: #667eea;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+        }
+
+        button {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        .card h2 {
+            color: #333;
+            font-size: 1.2em;
+            margin-bottom: 18px;
+        }
+
+        .loading-text {
+            text-align: center;
+            color: white;
+            font-size: 1.2em;
+            padding: 60px;
+        }
+
+        .empty-note {
+            color: #999;
+            text-align: center;
+            padding: 30px;
+            font-size: 0.9em;
+        }
+
+        .low-stock-tag {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.75em;
+            margin-left: 8px;
+        }
+
+        @media (max-width: 900px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const {
+            BarChart, Bar, PieChart, Pie, Cell, LineChart, Line,
+            XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+        } = Recharts;
+
+        const API_URL = 'http://localhost:5000/api';
+        const COLORS = ['#667eea', '#764ba2', '#28a745', '#ffc107', '#dc3545'];
+
+        function App() {
+            const [stock, setStock] = useState([]);
+            const [statusData, setStatusData] = useState([]);
+            const [trendData, setTrendData] = useState([]);
+            const [customerData, setCustomerData] = useState([]);
+            const [loading, setLoading] = useState(true);
+            const [userName, setUserName] = useState('');
+            const [userRole, setUserRole] = useState('');
+
+            useEffect(() => {
+                if (localStorage.getItem('isLoggedIn') !== 'true') {
+                    window.location.href = 'login.html';
+                    return;
+                }
+                setUserName(localStorage.getItem('userName') || '');
+                setUserRole(localStorage.getItem('userRole') || '');
+
+                const token = localStorage.getItem('token');
+                const authHeaders = { headers: { 'Authorization': `Bearer ${token}` } };
+
+                Promise.all([
+                    fetch(`${API_URL}/reports/equipment-stock`, authHeaders).then(r => r.json()),
+                    fetch(`${API_URL}/reports/repair-status`, authHeaders).then(r => r.json()),
+                    fetch(`${API_URL}/reports/repairs-over-time`, authHeaders).then(r => r.json()),
+                    fetch(`${API_URL}/reports/repairs-per-customer`, authHeaders).then(r => r.json())
+                ]).then(([stockRes, statusRes, trendRes, customerRes]) => {
+                    setStock(stockRes);
+                    setStatusData(statusRes);
+                    setTrendData(trendRes);
+                    setCustomerData(customerRes);
+                    setLoading(false);
+                }).catch(err => {
+                    console.error('Failed to load reports:', err);
+                    setLoading(false);
+                });
+            }, []);
+
+            function logout() {
+                localStorage.clear();
+                window.location.href = 'index.html';
+            }
+
+            function exportCSV() {
+                let csv = 'Report: Equipment Stock\nName,Quantity,Category\n';
+                stock.forEach(s => { csv += `${s.name},${s.quantity},${s.category || ''}\n`; });
+                csv += '\nReport: Repair Status\nStatus,Count\n';
+                statusData.forEach(s => { csv += `${s.name},${s.value}\n`; });
+                csv += '\nReport: Repairs per Customer\nCustomer,Repairs\n';
+                customerData.forEach(s => { csv += `${s.name},${s.repairs}\n`; });
+
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'equipment_management_report.csv';
+                a.click();
+            }
+
+            if (loading) {
+                return <div className="loading-text">Loading reports...</div>;
+            }
+
+            const lowStock = stock.filter(s => s.quantity < 10);
+
+            return (
+                <div className="container">
+                    <header>
+                        <div>
+                            <a href="dashboard.html" className="back-link">← Back to Dashboard</a>
+                            <h1 style={{marginTop: '8px'}}>📈 Reports & Analytics</h1>
+                        </div>
+                        <div className="header-right">
+                            <span>👤 {userName} <span className="role-badge" style={{background: userRole === 'admin' ? '#dc3545' : '#667eea'}}>{userRole.toUpperCase()}</span></span>
+                            <button onClick={exportCSV} style={{background: '#28a745'}}>⬇ Export CSV</button>
+                            <button onClick={logout}>Logout</button>
+                        </div>
+                    </header>
+
+                    <div className="grid">
+                        <div className="card">
+                            <h2>📦 Equipment Stock Levels {lowStock.length > 0 && <span className="low-stock-tag">{lowStock.length} low stock</span>}</h2>
+                            {stock.length === 0 ? <div className="empty-note">No equipment data yet</div> : (
+                                <ResponsiveContainer width="100%" height={280}>
+                                    <BarChart data={stock}>
+                                        <CartesianGrid strokeDasharray="3 3" />
+                                        <XAxis dataKey="name" tick={{fontSize: 11}} angle={-20} textAnchor="end" height={70} />
+                                        <YAxis />
+                                        <Tooltip />
+                                        <Bar dataKey="quantity" fill="#667eea" radius={[6,6,0,0]} />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            )}
+                        </div>
+
+                        <div className="card">
+                            <h2>🔧 Repair Status Breakdown</h2>
+                            {statusData.every(s => s.value === 0) ? <div className="empty-note">No repair orders yet</div> : (
+                                <ResponsiveContainer width="100%" height={280}>
+                                    <PieChart>
+                                        <Pie data={statusData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label>
+                                            {statusData.map((entry, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                                        </Pie>
+                                        <Tooltip />
+                                        <Legend />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            )}
+                        </div>
+
+                        <div className="card">
+                            <h2>📅 Repairs Over Time</h2>
+                            {trendData.length === 0 ? <div className="empty-note">No repair history yet</div> : (
+                                <ResponsiveContainer width="100%" height={280}>
+                                    <LineChart data={trendData}>
+                                        <CartesianGrid strokeDasharray="3 3" />
+                                        <XAxis dataKey="month" tick={{fontSize: 11}} />
+                                        <YAxis allowDecimals={false} />
+                                        <Tooltip />
+                                        <Line type="monotone" dataKey="repairs" stroke="#764ba2" strokeWidth={3} dot={{r: 5}} />
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            )}
+                        </div>
+
+                        <div className="card">
+                            <h2>👥 Repairs per Customer</h2>
+                            {customerData.length === 0 ? <div className="empty-note">No customer-linked repairs yet</div> : (
+                                <ResponsiveContainer width="100%" height={280}>
+                                    <BarChart data={customerData} layout="vertical">
+                                        <CartesianGrid strokeDasharray="3 3" />
+                                        <XAxis type="number" allowDecimals={false} />
+                                        <YAxis dataKey="name" type="category" width={120} tick={{fontSize: 12}} />
+                                        <Tooltip />
+                                        <Bar dataKey="repairs" fill="#28a745" radius={[0,6,6,0]} />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>

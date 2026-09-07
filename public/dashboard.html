@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Equipment Management System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #667eea;
+            font-size: 2em;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            background: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .tab-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .tab-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .badge-working { background: #d4edda; color: #155724; }
+        .badge-repair { background: #fff3cd; color: #856404; }
+        .badge-pending { background: #f8d7da; color: #721c24; }
+        .badge-completed { background: #d1ecf1; color: #0c5460; }
+
+        .action-btns {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.85em;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            margin: 50px auto;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .close {
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .close:hover {
+            color: #333;
+        }
+
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1>🔧 Equipment Management System</h1>
+                    <p style="margin-top: 10px; color: #666;">Reliance Customer Care - Equipment & Repair Tracking</p>
+                </div>
+                <div style="display: flex; gap: 15px; align-items: center;">
+                    <span style="color: #666;">👤 <span id="userName"></span> <span id="userRoleBadge" style="background: #667eea; color: white; padding: 3px 10px; border-radius: 12px; font-size: 0.8em; margin-left: 5px;"></span></span>
+                    <button id="manageCustomersBtn" onclick="window.location.href='customers.html'" style="background: #28a745; padding: 10px 20px;">👥 Customers</button>
+                    <button id="manageEmployeesBtn" onclick="window.location.href='employees.html'" style="background: #17a2b8; padding: 10px 20px; display: none;">👔 Employees</button>
+                    <button id="manageReportsBtn" onclick="window.location.href='reports.html'" style="background: #ffc107; padding: 10px 20px;">📊 Reports</button>
+                    <button onclick="logout()" style="background: #dc3545; padding: 10px 20px;">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <div class="stats" id="stats">
+            <div class="stat-card">
+                <h3>Total Equipment</h3>
+                <div class="number" id="totalEquipment">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Total Machines</h3>
+                <div class="number" id="totalMachines">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Pending Repairs</h3>
+                <div class="number" id="pendingRepairs">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Active Repairs</h3>
+                <div class="number" id="activeRepairs">0</div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showTab('equipment')">Equipment</button>
+            <button class="tab-btn" onclick="showTab('machines')">Machines</button>
+            <button class="tab-btn" onclick="showTab('repairs')">Repair Orders</button>
+        </div>
+
+        <!-- Equipment Tab -->
+        <div id="equipment" class="tab-content active">
+            <h2 style="margin-bottom: 20px;">Equipment Management</h2>
+            <div class="alert alert-success" id="equipmentAlert"></div>
+            
+            <form id="equipmentForm" style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 30px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Equipment Name *</label>
+                        <input type="text" id="equipmentName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Model</label>
+                        <input type="text" id="equipmentModel">
+                    </div>
+                    <div class="form-group">
+                        <label>Serial Number</label>
+                        <input type="text" id="equipmentSerial">
+                    </div>
+                    <div class="form-group">
+                        <label>Quantity *</label>
+                        <input type="number" id="equipmentQuantity" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <input type="text" id="equipmentCategory" placeholder="e.g., Motors, Sensors, Cables">
+                    </div>
+                </div>
+                <button type="submit">Add Equipment</button>
+            </form>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Model</th>
+                        <th>Serial Number</th>
+                        <th>Quantity</th>
+                        <th>Category</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="equipmentTable"></tbody>
+            </table>
+        </div>
+
+        <!-- Machines Tab -->
+        <div id="machines" class="tab-content">
+            <h2 style="margin-bottom: 20px;">Machine Management</h2>
+            <div class="alert alert-success" id="machineAlert"></div>
+            
+            <form id="machineForm" style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 30px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Machine Name *</label>
+                        <input type="text" id="machineName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Model</label>
+                        <input type="text" id="machineModel">
+                    </div>
+                    <div class="form-group">
+                        <label>Location *</label>
+                        <input type="text" id="machineLocation" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="machineStatus">
+                            <option value="working">Working</option>
+                            <option value="needs_repair">Needs Repair</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit">Add Machine</button>
+            </form>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Machine Name</th>
+                        <th>Model</th>
+                        <th>Location</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="machineTable"></tbody>
+            </table>
+        </div>
+
+        <!-- Repairs Tab -->
+        <div id="repairs" class="tab-content">
+            <h2 style="margin-bottom: 20px;">Repair Orders</h2>
+            <div class="alert alert-success" id="repairAlert"></div>
+            
+            <button onclick="openRepairModal()" style="margin-bottom: 20px;">+ Create New Repair Order</button>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Machine</th>
+                        <th>Issue Description</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="repairTable"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Repair Order Modal -->
+    <div id="repairModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeRepairModal()">&times;</span>
+            <h2>Create Repair Order</h2>
+            <form id="repairForm" style="margin-top: 20px;">
+                <div class="form-group">
+                    <label>Select Machine *</label>
+                    <select id="repairMachine" required></select>
+                </div>
+                <div class="form-group">
+                    <label>Issue Description *</label>
+                    <textarea id="repairIssue" rows="4" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Equipment Needed</label>
+                    <div id="equipmentNeeded"></div>
+                    <button type="button" onclick="addEquipmentRow()" style="margin-top: 10px;">+ Add Equipment</button>
+                </div>
+                <button type="submit">Create Repair Order</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000/api';
+
+        // Helper: automatically adds JWT token to every request
+        function authfetch(url, options = {}) {
+            const token = localStorage.getItem('token');
+            return fetch(url, {
+                ...options,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                    ...(options.headers || {})
+                }
+            });
+        }
+
+        
+        // Check if user is logged in
+        if (localStorage.getItem('isLoggedIn') !== 'true') {
+            window.location.href = 'login.html';
+        }
+
+        // Display user info and apply role-based access
+        const userEmail = localStorage.getItem('userEmail');
+        const userName = localStorage.getItem('userName');
+        const userRole = localStorage.getItem('userRole');
+
+        if (userName) {
+            document.getElementById('userName').textContent = userName;
+        }
+        if (userRole) {
+            const badge = document.getElementById('userRoleBadge');
+            badge.textContent = userRole.toUpperCase();
+            if (userRole === 'admin') {
+                badge.style.background = '#dc3545';
+                // Show admin-only buttons
+                document.getElementById('manageEmployeesBtn').style.display = 'inline-block';
+            }
+            const userStatus = localStorage.getItem('userStatus');
+
+            // Read-only mode for inactive employees
+            if (userStatus === 'inactive') {
+                const banner = document.createElement('div');
+                banner.style.cssText = 'background:#fff3cd; color:#856404; padding:14px 20px; border-radius:10px; margin-bottom:20px; font-weight:600; text-align:center;';
+                banner.textContent = '⚠️ Your account is inactive. You can view data but cannot add, edit, or delete records.';
+                document.querySelector('.container').insertBefore(banner, document.querySelector('.stats'));
+
+                // Disable all forms and inputs once page loads
+                window.addEventListener('load', () => {
+                    document.querySelectorAll('form button[type="submit"]').forEach(btn => {
+                        btn.disabled = true;
+                        btn.style.opacity = '0.5';
+                        btn.style.cursor = 'not-allowed';
+                        btn.title = 'Read-only mode: account inactive';
+                    });
+                });
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('userName');
+            localStorage.removeItem('userRole');
+            localStorage.removeItem('userId');
+            window.location.href = 'index.html';
+        }
+
+        // Load stats
+        async function loadStats() {
+            try {
+                const res = await authfetch(`${API_URL}/stats`);
+                const data = await res.json();
+                document.getElementById('totalEquipment').textContent = data.total_equipment;
+                document.getElementById('totalMachines').textContent = data.total_machines;
+                document.getElementById('pendingRepairs').textContent = data.pending_repairs;
+                document.getElementById('activeRepairs').textContent = data.active_repairs;
+            } catch (err) {
+                console.error('Error loading stats:', err);
+            }
+        }
+
+        // Tab switching
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+
+            if (tabName === 'equipment') loadEquipment();
+            if (tabName === 'machines') loadMachines();
+            if (tabName === 'repairs') loadRepairs();
+        }
+
+        // Equipment functions
+        async function loadEquipment() {
+            try {
+                const res = await authfetch(`${API_URL}/equipment`);
+                const data = await res.json();
+                const tbody = document.getElementById('equipmentTable');
+                tbody.innerHTML = data.map(eq => `
+                    <tr>
+                        <td>${eq.name}</td>
+                        <td>${eq.model || '-'}</td>
+                        <td>${eq.serial_number || '-'}</td>
+                        <td>${eq.quantity}</td>
+                        <td>${eq.category || '-'}</td>
+                        <td>
+                            <div class="action-btns">
+                                <button class="btn-small btn-danger" onclick="deleteEquipment(${eq.id})">Delete</button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                console.error('Error loading equipment:', err);
+            }
+        }
+
+        document.getElementById('equipmentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                name: document.getElementById('equipmentName').value,
+                model: document.getElementById('equipmentModel').value,
+                serial_number: document.getElementById('equipmentSerial').value,
+                quantity: parseInt(document.getElementById('equipmentQuantity').value),
+                category: document.getElementById('equipmentCategory').value
+            };
+
+            try {
+                const res = await authfetch(`${API_URL}/equipment`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (res.ok) {
+                    showAlert('equipmentAlert', 'Equipment added successfully!');
+                    e.target.reset();
+                    loadEquipment();
+                    loadStats();
+                }
+            } catch (err) {
+                console.error('Error adding equipment:', err);
+            }
+        });
+
+        async function deleteEquipment(id) {
+            if (!confirm('Delete this equipment?')) return;
+            try {
+                await authfetch(`${API_URL}/equipment/${id}`, { method: 'DELETE' });
+                loadEquipment();
+                loadStats();
+            } catch (err) {
+                console.error('Error deleting equipment:', err);
+            }
+        }
+
+        // Machine functions
+        async function loadMachines() {
+            try {
+                const res = await authfetch(`${API_URL}/machines`);
+                const data = await res.json();
+                const tbody = document.getElementById('machineTable');
+                tbody.innerHTML = data.map(m => `
+                    <tr>
+                        <td>${m.machine_name}</td>
+                        <td>${m.model || '-'}</td>
+                        <td>${m.location}</td>
+                        <td><span class="badge badge-${m.status === 'working' ? 'working' : 'repair'}">${m.status.replace('_', ' ')}</span></td>
+                        <td>
+                            <div class="action-btns">
+                                <button class="btn-small btn-danger" onclick="deleteMachine(${m.id})">Delete</button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                console.error('Error loading machines:', err);
+            }
+        }
+
+        document.getElementById('machineForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                machine_name: document.getElementById('machineName').value,
+                model: document.getElementById('machineModel').value,
+                location: document.getElementById('machineLocation').value,
+                status: document.getElementById('machineStatus').value
+            };
+
+            try {
+                const res = await authfetch(`${API_URL}/machines`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (res.ok) {
+                    showAlert('machineAlert', 'Machine added successfully!');
+                    e.target.reset();
+                    loadMachines();
+                    loadStats();
+                }
+            } catch (err) {
+                console.error('Error adding machine:', err);
+            }
+        });
+
+        async function deleteMachine(id) {
+            if (!confirm('Delete this machine?')) return;
+            try {
+                await authfetch(`${API_URL}/machines/${id}`, { method: 'DELETE' });
+                loadMachines();
+                loadStats();
+            } catch (err) {
+                console.error('Error deleting machine:', err);
+            }
+        }
+
+        // Repair functions
+        async function loadRepairs() {
+            try {
+                const res = await authfetch(`${API_URL}/repairs`);
+                const data = await res.json();
+                const tbody = document.getElementById('repairTable');
+                tbody.innerHTML = data.map(r => `
+                    <tr>
+                        <td>#${r.id}</td>
+                        <td>${r.machine_name}</td>
+                        <td>${r.issue_description.substring(0, 50)}...</td>
+                        <td><span class="badge badge-${r.status === 'completed' ? 'completed' : r.status === 'in_progress' ? 'repair' : 'pending'}">${r.status.replace('_', ' ')}</span></td>
+                        <td>${new Date(r.created_at).toLocaleDateString()}</td>
+                        <td>
+                            <select onchange="updateRepairStatus(${r.id}, this.value)" ${r.status === 'completed' ? 'disabled' : ''}>
+                                <option value="">Change Status</option>
+                                <option value="pending" ${r.status === 'pending' ? 'selected' : ''}>Pending</option>
+                                <option value="in_progress" ${r.status === 'in_progress' ? 'selected' : ''}>In Progress</option>
+                                <option value="completed" ${r.status === 'completed' ? 'selected' : ''}>Completed</option>
+                            </select>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                console.error('Error loading repairs:', err);
+            }
+        }
+
+        async function updateRepairStatus(id, status) {
+            if (!status) return;
+            try {
+                await authfetch(`${API_URL}/repairs/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status })
+                });
+                loadRepairs();
+                loadStats();
+                loadMachines();
+            } catch (err) {
+                console.error('Error updating repair:', err);
+            }
+        }
+
+        // Repair modal
+        async function openRepairModal() {
+            document.getElementById('repairModal').style.display = 'block';
+            const res = await authfetch(`${API_URL}/machines`);
+            const machines = await res.json();
+            const select = document.getElementById('repairMachine');
+            select.innerHTML = '<option value="">Select a machine</option>' + 
+                machines.map(m => `<option value="${m.id}">${m.machine_name} - ${m.location}</option>`).join('');
+            
+            const equipRes = await authfetch(`${API_URL}/equipment`);
+            const equipment = await equipRes.json();
+            window.availableEquipment = equipment;
+        }
+
+        function closeRepairModal() {
+            document.getElementById('repairModal').style.display = 'none';
+            document.getElementById('repairForm').reset();
+            document.getElementById('equipmentNeeded').innerHTML = '';
+        }
+
+        function addEquipmentRow() {
+            const container = document.getElementById('equipmentNeeded');
+            const row = document.createElement('div');
+            row.style.cssText = 'display: grid; grid-template-columns: 2fr 1fr auto; gap: 10px; margin-bottom: 10px;';
+            row.innerHTML = `
+                <select class="equipment-select">
+                    <option value="">Select equipment</option>
+                    ${window.availableEquipment.map(e => `<option value="${e.id}">${e.name} (Stock: ${e.quantity})</option>`).join('')}
+                </select>
+                <input type="number" class="equipment-qty" placeholder="Quantity" min="1">
+                <button type="button" onclick="this.parentElement.remove()">Remove</button>
+            `;
+            container.appendChild(row);
+        }
+
+        document.getElementById('repairForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const equipmentRows = document.querySelectorAll('#equipmentNeeded > div');
+            const equipment_orders = Array.from(equipmentRows).map(row => ({
+                equipment_id: parseInt(row.querySelector('.equipment-select').value),
+                quantity_needed: parseInt(row.querySelector('.equipment-qty').value)
+            })).filter(eq => eq.equipment_id && eq.quantity_needed);
+
+            const data = {
+                machine_id: parseInt(document.getElementById('repairMachine').value),
+                issue_description: document.getElementById('repairIssue').value,
+                equipment_orders
+            };
+
+            try {
+                const res = await authfetch(`${API_URL}/repairs`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (res.ok) {
+                    closeRepairModal();
+                    showAlert('repairAlert', 'Repair order created successfully!');
+                    loadRepairs();
+                    loadStats();
+                    loadMachines();
+                }
+            } catch (err) {
+                console.error('Error creating repair:', err);
+            }
+        });
+
+        function showAlert(id, message) {
+            const alert = document.getElementById(id);
+            alert.textContent = message;
+            alert.style.display = 'block';
+            setTimeout(() => alert.style.display = 'none', 3000);
+        }
+
+        // Initial load
+        loadStats();
+        loadEquipment();
+    </script>
+</body>
+</html>

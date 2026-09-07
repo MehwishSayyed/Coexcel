@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employees - Reliance EMS</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container { max-width: 1400px; margin: 0 auto; }
+
+        header {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        h1 { color: #667eea; font-size: 1.8em; }
+
+        .back-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .back-link:hover { text-decoration: underline; }
+
+        .header-right { display: flex; gap: 15px; align-items: center; }
+
+        .role-badge {
+            background: #dc3545;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+        }
+
+        .panel {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 0.95em;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        button:hover { background: #5568d3; transform: translateY(-1px); }
+
+        .btn-danger { background: #dc3545; }
+        .btn-danger:hover { background: #c82333; }
+        .btn-success { background: #28a745; }
+        .btn-success:hover { background: #218838; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+
+        th, td {
+            padding: 14px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        th { background: #f8f9fa; font-weight: 600; }
+        tr:hover { background: #f8f9fa; }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.82em;
+            font-weight: 600;
+        }
+
+        .badge-admin { background: #f8d7da; color: #721c24; }
+        .badge-employee { background: #d1ecf1; color: #0c5460; }
+        .badge-active { background: #d4edda; color: #155724; }
+        .badge-inactive { background: #fff3cd; color: #856404; }
+
+        .action-btns { display: flex; gap: 8px; }
+        .btn-small { padding: 6px 14px; font-size: 0.85em; }
+
+        .empty-state { text-align: center; padding: 60px 20px; color: #999; }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .alert-success { background: #d4edda; color: #155724; }
+        .alert-error { background: #f8d7da; color: #721c24; }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: #444;
+            font-size: 0.92em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div>
+                <a href="dashboard.html" class="back-link">← Back to Dashboard</a>
+                <h1 style="margin-top: 8px;">👔 Employee Management</h1>
+            </div>
+            <div class="header-right">
+                <span>👤 <span id="userName"></span> <span class="role-badge">ADMIN</span></span>
+                <button onclick="logout()" style="background: #dc3545;">Logout</button>
+            </div>
+        </header>
+
+        <div class="panel">
+            <div class="alert alert-success" id="alertSuccess"></div>
+            <div class="alert alert-error" id="alertError"></div>
+
+            <div class="info-box">
+                💡 Deactivated employees can still log in to view their history, but cannot add, edit, or delete records (read-only mode).
+            </div>
+
+            <div class="panel-header">
+                <h2 style="color: #333;">All Employees</h2>
+                <button onclick="window.location.href='signup.html'">+ Add Employee</button>
+            </div>
+
+            <table id="employeesTable">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Joined</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="employeesBody"></tbody>
+            </table>
+            <div class="empty-state" id="emptyState" style="display: none;">
+                No employees yet. Click "+ Add Employee" to create one.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000/api';
+                // Helper: automatically adds JWT token to every request
+        function authfetch(url, options = {}) {
+            const token = localStorage.getItem('token');
+            return fetch(url, {
+                ...options,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                    ...(options.headers || {})
+                }
+            });
+        }
+
+        // Auth check - admin only
+        if (localStorage.getItem('isLoggedIn') !== 'true') {
+            window.location.href = 'login.html';
+        }
+        if (localStorage.getItem('userRole') !== 'admin') {
+            alert('Only admins can access employee management');
+            window.location.href = 'dashboard.html';
+        }
+
+        document.getElementById('userName').textContent = localStorage.getItem('userName') || '';
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+
+        async function loadEmployees() {
+            try {
+                const res = await authfetch(`${API_URL}/users`);
+                const users = await res.json();
+                renderEmployees(users);
+            } catch (err) {
+                showAlert('alertError', 'Failed to load employees. Is the server running?');
+                console.error(err);
+            }
+        }
+
+        function renderEmployees(users) {
+            const tbody = document.getElementById('employeesBody');
+            const emptyState = document.getElementById('emptyState');
+
+            if (users.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+            emptyState.style.display = 'none';
+
+            const currentUserId = parseInt(localStorage.getItem('userId'));
+
+            tbody.innerHTML = users.map(u => `
+                <tr>
+                    <td><strong>${u.name}</strong>${u.id === currentUserId ? ' <span style="color:#888; font-size:0.85em;">(you)</span>' : ''}</td>
+                    <td>${u.email}</td>
+                    <td><span class="badge badge-${u.role}">${u.role.toUpperCase()}</span></td>
+                    <td><span class="badge badge-${u.status === 'active' ? 'active' : 'inactive'}">${u.status === 'active' ? 'Active' : 'Inactive (Read-only)'}</span></td>
+                    <td>${new Date(u.created_at).toLocaleDateString()}</td>
+                    <td>
+                        <div class="action-btns">
+                            ${u.role === 'admin' ? '<span style="color:#999; font-size:0.85em;">Admin account</span>' : `
+                                ${u.status === 'active'
+                                    ? `<button class="btn-small btn-danger" onclick="toggleStatus(${u.id}, 'inactive')">Deactivate</button>`
+                                    : `<button class="btn-small btn-success" onclick="toggleStatus(${u.id}, 'active')">Activate</button>`
+                                }
+                            `}
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function toggleStatus(id, newStatus) {
+            const action = newStatus === 'active' ? 'activate' : 'deactivate';
+            if (!confirm(`Are you sure you want to ${action} this employee?`)) return;
+
+            try {
+                const res = await authfetch(`${API_URL}/users/${id}/status`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus })
+                });
+
+                if (res.ok) {
+                    showAlert('alertSuccess', `Employee ${action}d successfully`);
+                    loadEmployees();
+                } else {
+                    showAlert('alertError', `Failed to ${action} employee`);
+                }
+            } catch (err) {
+                showAlert('alertError', 'Connection error');
+            }
+        }
+
+        function showAlert(id, message) {
+            const el = document.getElementById(id);
+            el.textContent = message;
+            el.style.display = 'block';
+            setTimeout(() => el.style.display = 'none', 3000);
+        }
+
+        loadEmployees();
+    </script>
+</body>
+</html>
