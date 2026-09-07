@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CoExcel – Equipment Management</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --navy: #ffffff9d;
+    --navy2: #ffffffb5;
+    --navy3: #9bacd4;
+    --navy4: #47587c;
+    --accent: #396cbe;
+    --accent2: #b3cded;
+    --accent-glow: rgba(59,130,246,0.15);
+    --text: #307bc5;
+    --text2: #000000;
+    --text3: #f5f9ff;
+    --border: rgba(12, 22, 2, 0.07);
+    --border2: rgba(15, 52, 111, 0.25);
+    --card: rgba(255, 255, 255, 0.673);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--navy);
+    color: var(--text);
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4 { font-family: 'Syne', sans-serif; }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(251, 251, 252, 0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 5%;
+    height: 64px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-logo {
+    display: flex; align-items: center; gap: 10px;
+    font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.3rem;
+    color: var(--text); text-decoration: none;
+  }
+  .logo-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--accent); box-shadow: 0 0 8px var(--accent);
+  }
+  .nav-links { display: flex; align-items: center; gap: 32px; }
+  .nav-links a {
+    color: var(--text2); text-decoration: none; font-size: 0.88rem;
+    font-weight: 500; letter-spacing: 0.02em; transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--text); }
+  .nav-cta {
+    background: var(--accent); color: #fff !important;
+    padding: 8px 20px; border-radius: 8px; font-size: 0.85rem !important;
+    font-weight: 600 !important; letter-spacing: 0.03em !important;
+    transition: background 0.2s, transform 0.15s !important;
+  }
+  .nav-cta:hover { background: #2563eb !important; transform: translateY(-1px); }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 120px 5% 80px;
+    position: relative; overflow: hidden;
+  }
+  .hero-bg {
+    position: absolute; inset: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse 80% 50% at 50% 0%, rgba(59,130,246,0.12) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 40% at 80% 80%, rgba(99,102,241,0.08) 0%, transparent 60%);
+  }
+  .hero-grid {
+    position: absolute; inset: 0; pointer-events: none; opacity: 0.04;
+    background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(59,130,246,0.1); border: 1px solid var(--border2);
+    color: var(--accent2); font-size: 0.78rem; font-weight: 500;
+    padding: 5px 14px; border-radius: 999px; margin-bottom: 28px;
+    letter-spacing: 0.04em; text-transform: uppercase;
+  }
+  .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .hero h1 {
+    font-size: clamp(2.6rem, 5vw, 4.2rem);
+    font-weight: 800; line-height: 1.1;
+    letter-spacing: -0.02em; margin-bottom: 20px;
+    max-width: 820px;
+  }
+  .hero h1 span { color: var(--accent2); }
+  .hero p {
+    color: var(--text2); font-size: 1.1rem; max-width: 540px;
+    margin: 0 auto 40px; font-weight: 400; line-height: 1.7;
+  }
+  .hero-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .btn-primary {
+    background: var(--accent); color: #fff;
+    padding: 14px 32px; border-radius: 10px; font-size: 0.95rem;
+    font-weight: 600; text-decoration: none; transition: all 0.2s;
+    border: none; cursor: pointer;
+  }
+  .btn-primary:hover { background: #2563eb; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(59,130,246,0.35); }
+  .btn-outline {
+    background: transparent; color: var(--text);
+    padding: 14px 32px; border-radius: 10px; font-size: 0.95rem;
+    font-weight: 500; text-decoration: none; transition: all 0.2s;
+    border: 1px solid var(--border);
+  }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent2); background: var(--accent-glow); }
+
+  /* STATS BAR */
+  .stats-bar {
+    background: var(--navy2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+    padding: 28px 5%; display: flex; justify-content: center; gap: 60px; flex-wrap: wrap;
+  }
+  .stat { text-align: center; }
+  .stat-num { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 700; color: var(--text); }
+  .stat-num span { color: var(--accent2); }
+  .stat-label { font-size: 0.8rem; color: var(--text3); letter-spacing: 0.05em; text-transform: uppercase; margin-top: 2px; }
+
+  /* SECTION */
+  section { padding: 88px 5%; }
+  .section-tag {
+    display: inline-block; color: var(--accent2); font-size: 0.78rem;
+    font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 14px;
+  }
+  .section-title { font-size: clamp(1.8rem, 3vw, 2.5rem); font-weight: 700; line-height: 1.2; margin-bottom: 14px; }
+  .section-sub { color: var(--text2); font-size: 1rem; max-width: 480px; line-height: 1.7; }
+
+  /* SERVICES */
+  .services { background: var(--navy2); }
+  .services-header { text-align: center; margin-bottom: 56px; }
+  .services-header .section-sub { margin: 0 auto; }
+  .services-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 20px; max-width: 1100px; margin: 0 auto;
+  }
+  .service-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 32px 28px;
+    transition: border-color 0.25s, transform 0.25s, background 0.25s;
+    cursor: default;
+  }
+  .service-card:hover {
+    border-color: var(--border2); transform: translateY(-4px);
+    background: rgba(59,130,246,0.04);
+  }
+  .svc-icon {
+    width: 48px; height: 48px; border-radius: 12px;
+    background: rgba(59,130,246,0.12); border: 1px solid var(--border2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; margin-bottom: 18px;
+  }
+  .service-card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 10px; color: var(--text); }
+  .service-card p { font-size: 0.88rem; color: var(--text2); line-height: 1.75; }
+
+  /* HOW IT WORKS */
+  .how { background: var(--navy); }
+  .how-inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
+  .steps { display: flex; flex-direction: column; gap: 28px; }
+  .step { display: flex; gap: 18px; align-items: flex-start; }
+  .step-num {
+    min-width: 36px; height: 36px; border-radius: 10px;
+    background: rgba(59,130,246,0.12); border: 1px solid var(--border2);
+    color: var(--accent2); font-family: 'Syne', sans-serif;
+    font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; justify-content: center;
+  }
+  .step-text h4 { font-size: 0.95rem; font-weight: 600; margin-bottom: 4px; }
+  .step-text p { font-size: 0.85rem; color: var(--text2); line-height: 1.7; }
+
+  /* Dashboard mockup */
+  .dash-mock {
+    background: var(--navy3); border: 1px solid var(--border);
+    border-radius: 16px; overflow: hidden;
+  }
+  .dash-topbar {
+    background: var(--navy4); padding: 12px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot-r { background: #ef4444; } .dot-y { background: #f59e0b; } .dot-g { background: #10b981; }
+  .dash-title { font-size: 0.78rem; color: var(--text3); margin-left: auto; margin-right: auto; font-family: 'Syne', sans-serif; font-weight: 600; letter-spacing: 0.05em; }
+  .dash-body { padding: 18px; }
+  .dash-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .mini-card {
+    background: var(--navy4); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px;
+  }
+  .mini-card-label { font-size: 0.7rem; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+  .mini-card-num { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 700; color: var(--text); }
+  .mini-card-num span { color: var(--accent2); font-size: 0.75rem; font-weight: 500; margin-left: 4px; }
+  .dash-table { background: var(--navy4); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .dt-head { display: grid; grid-template-columns: 2fr 1fr 1fr; padding: 8px 14px; border-bottom: 1px solid var(--border); }
+  .dt-head span { font-size: 0.68rem; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .dt-row { display: grid; grid-template-columns: 2fr 1fr 1fr; padding: 9px 14px; border-bottom: 1px solid var(--border); align-items: center; }
+  .dt-row:last-child { border-bottom: none; }
+  .dt-name { font-size: 0.8rem; color: var(--text); font-weight: 500; }
+  .dt-qty { font-size: 0.78rem; color: var(--text2); }
+  .badge-status {
+    font-size: 0.68rem; font-weight: 600; padding: 2px 8px; border-radius: 999px;
+    display: inline-block; letter-spacing: 0.03em;
+  }
+  .s-ok { background: rgba(16,185,129,0.12); color: #34d399; border: 1px solid rgba(16,185,129,0.2); }
+  .s-warn { background: rgba(245,158,11,0.12); color: #fbbf24; border: 1px solid rgba(245,158,11,0.2); }
+  .s-order { background: rgba(99,102,241,0.12); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.2); }
+
+  /* EQUIPMENT SECTION */
+  .equip { background: var(--navy2); }
+  .equip-header { text-align: center; margin-bottom: 48px; }
+  .equip-header .section-sub { margin: 0 auto; }
+  .equip-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 14px; max-width: 900px; margin: 0 auto; }
+  .equip-item {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 24px 16px; text-align: center;
+    transition: border-color 0.2s, background 0.2s, transform 0.2s; cursor: default;
+  }
+  .equip-item:hover { border-color: var(--border2); background: rgba(59,130,246,0.05); transform: translateY(-3px); }
+  .equip-icon { font-size: 28px; margin-bottom: 10px; }
+  .equip-item p { font-size: 0.8rem; color: var(--text2); font-weight: 500; }
+
+  /* CTA */
+  .cta-section {
+    background: var(--navy);
+    text-align: center; padding: 100px 5%;
+    position: relative; overflow: hidden;
+  }
+  .cta-section::before {
+    content: ''; position: absolute;
+    top: 50%; left: 50%; transform: translate(-50%,-50%);
+    width: 600px; height: 300px; border-radius: 50%;
+    background: radial-gradient(ellipse, rgba(59,130,246,0.1) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .cta-section h2 { font-size: clamp(1.8rem, 3vw, 2.6rem); font-weight: 800; margin-bottom: 14px; }
+  .cta-section p { color: var(--text2); margin-bottom: 36px; font-size: 1rem; }
+
+  /* FOOTER */
+  footer {
+    background: var(--navy2); border-top: 1px solid var(--border);
+    padding: 40px 5%; display: flex; align-items: center;
+    justify-content: space-between; flex-wrap: wrap; gap: 20px;
+  }
+  .footer-logo { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+  .footer-links { display: flex; gap: 24px; }
+  .footer-links a { color: var(--text3); text-decoration: none; font-size: 0.83rem; transition: color 0.2s; }
+  .footer-links a:hover { color: var(--text2); }
+  .footer-copy { color: var(--text3); font-size: 0.78rem; }
+
+  @media (max-width: 768px) {
+    .nav-links { display: none; }
+    .how-inner { grid-template-columns: 1fr; }
+    .stats-bar { gap: 28px; }
+    .dash-row { grid-template-columns: 1fr; }
+    footer { flex-direction: column; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">
+    
+    CoExcel
+  </a>
+  <div class="nav-links">
+    <a href="#services">Services</a>
+    <a href="#how">How it works</a>
+    <a href="#equipment">Equipment</a>
+    <a href="login.html" class="nav-cta">Employee Login</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="home">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <h1>Smart Equipment<br><span>Management</span> for CoExcel</h1>
+  <p>Track, manage, and request electronic equipment across your entire organisation — from laptops to ACs, all in one place.</p>
+  <div class="hero-btns">
+    <a href="signup.html" class="btn-primary">Get Started →</a>
+    <a href="#how" class="btn-outline">See How It Works</a>
+  </div>
+</section>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="stat">
+    <div class="stat-num">500<span>+</span></div>
+    <div class="stat-label">Devices Tracked</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">99.9<span>%</span></div>
+    <div class="stat-label">Uptime</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">24<span>/7</span></div>
+    <div class="stat-label">Support</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">100<span>%</span></div>
+    <div class="stat-label">Audit Logged</div>
+  </div>
+</div>
+
+<!-- SERVICES -->
+<section class="services" id="services">
+  <div class="services-header">
+    <div class="section-tag">What We Offer</div>
+    <h2 class="section-title">Everything you need to<br>manage your equipment</h2>
+    <p class="section-sub">Purpose-built for CoExcel's Reliance operations — complete visibility over every device.</p>
+  </div>
+  <div class="services-grid">
+    <div class="service-card">
+      <div class="svc-icon">📦</div>
+      <h3>Real-Time Inventory</h3>
+      <p>Live tracking of all equipment — laptops, ACs, TVs, fridges, and more — with status updates as they happen.</p>
+    </div>
+    <div class="service-card">
+      <div class="svc-icon">✅</div>
+      <h3>Check-In / Check-Out</h3>
+      <p>Employees can log equipment in and out with a full audit trail. Know who has what, and when.</p>
+    </div>
+    <div class="service-card">
+      <div class="svc-icon">🛒</div>
+      <h3>Purchase Requests</h3>
+      <p>Raise and manage equipment purchase orders. Managers approve, procurement tracks — all in one workflow.</p>
+    </div>
+    <div class="service-card">
+      <div class="svc-icon">🔔</div>
+      <h3>Low Stock Alerts</h3>
+      <p>Automatic notifications when equipment stock drops below threshold — never run out of critical devices.</p>
+    </div>
+    <div class="service-card">
+      <div class="svc-icon">📊</div>
+      <h3>Reports & Logs</h3>
+      <p>Export detailed inventory reports, usage history, and activity logs for compliance and auditing.</p>
+    </div>
+    <div class="service-card">
+      <div class="svc-icon">🔐</div>
+      <h3>Role-Based Access</h3>
+      <p>Separate access levels for admins, managers, and employees. Everyone sees only what they need.</p>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+  <div class="how-inner">
+    <div>
+      <div class="section-tag">How It Works</div>
+      <h2 class="section-title">Simple for employees,<br>powerful for admins</h2>
+      <p class="section-sub" style="margin-bottom: 40px;">Four steps to complete equipment control across your CoExcel operation.</p>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">01</div>
+          <div class="step-text">
+            <h4>Sign Up & Login</h4>
+            <p>Employees create an account with their ID and department. Admin approves access and assigns a role.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">02</div>
+          <div class="step-text">
+            <h4>View the Dashboard</h4>
+            <p>See all equipment at a glance — total inventory, status (available, in use, repair), and recent activity.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">03</div>
+          <div class="step-text">
+            <h4>Add or Remove Equipment</h4>
+            <p>Log equipment in when it arrives, or mark it as issued, removed, or under repair with one form.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">04</div>
+          <div class="step-text">
+            <h4>Request New Equipment</h4>
+            <p>Raise a purchase request for any item. Your manager gets notified and can approve or reject instantly.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Dashboard Preview Mockup -->
+    <div class="dash-mock">
+      <div class="dash-topbar">
+        <div class="dot dot-r"></div>
+        <div class="dot dot-y"></div>
+        <div class="dot dot-g"></div>
+        <div class="dash-title">CoExcel Dashboard</div>
+      </div>
+      <div class="dash-body">
+        <div class="dash-row">
+          <div class="mini-card">
+            <div class="mini-card-label">Total Equipment</div>
+            <div class="mini-card-num">142 <span>▲ 3 today</span></div>
+          </div>
+          <div class="mini-card">
+            <div class="mini-card-label">Pending Orders</div>
+            <div class="mini-card-num">7 <span>awaiting</span></div>
+          </div>
+        </div>
+        <div class="dash-table">
+          <div class="dt-head">
+            <span>Item</span><span>Qty</span><span>Status</span>
+          </div>
+          <div class="dt-row">
+            <div class="dt-name">Laptops (HP)</div>
+            <div class="dt-qty">24</div>
+            <div><span class="badge-status s-ok">Available</span></div>
+          </div>
+          <div class="dt-row">
+            <div class="dt-name">Air Conditioner</div>
+            <div class="dt-qty">6</div>
+            <div><span class="badge-status s-warn">Low Stock</span></div>
+          </div>
+          <div class="dt-row">
+            <div class="dt-name">Television 55"</div>
+            <div class="dt-qty">3</div>
+            <div><span class="badge-status s-ok">Available</span></div>
+          </div>
+          <div class="dt-row">
+            <div class="dt-name">Refrigerator</div>
+            <div class="dt-qty">2</div>
+            <div><span class="badge-status s-order">Ordered</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EQUIPMENT -->
+<section class="equip" id="equipment">
+  <div class="equip-header">
+    <div class="section-tag">Equipment Categories</div>
+    <h2 class="section-title">All your devices, one platform</h2>
+    <p class="section-sub">CoExcel tracks every type of electronic equipment used across the organisation.</p>
+  </div>
+  <div class="equip-grid">
+    <div class="equip-item"><div class="equip-icon">💻</div><p>Laptops</p></div>
+    <div class="equip-item"><div class="equip-icon">🖥️</div><p>Desktops</p></div>
+    <div class="equip-item"><div class="equip-icon">❄️</div><p>Air Conditioners</p></div>
+    <div class="equip-item"><div class="equip-icon">📺</div><p>Televisions</p></div>
+    <div class="equip-item"><div class="equip-icon">🧊</div><p>Refrigerators</p></div>
+    <div class="equip-item"><div class="equip-icon">🖨️</div><p>Printers</p></div>
+    <div class="equip-item"><div class="equip-icon">📡</div><p>Routers</p></div>
+    <div class="equip-item"><div class="equip-icon">🔋</div><p>UPS / Power</p></div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="section-tag">Ready to get started?</div>
+  <h2>Bring order to your operations.</h2>
+  <p>Join CoExcel employees already using the platform to manage equipment smarter.</p>
+  <div class="hero-btns">
+    <a href="signup.html" class="btn-primary">Create Employee Account</a>
+    <a href="login.html" class="btn-outline">Sign In</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">
+    <div class="logo-dot"></div>
+    CoExcel EMS
+  </div>
+  <div class="footer-links">
+    <a href="#services">Services</a>
+    <a href="#how">How it works</a>
+    <a href="#equipment">Equipment</a>
+    <a href="login.html">Login</a>
+  </div>
+  <div class="footer-copy">© 2025 CoExcel · Reliance Customer Service</div>
+</footer>
+
+</body>
+</html>

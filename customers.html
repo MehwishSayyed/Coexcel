@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customers - Reliance EMS</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container { max-width: 1400px; margin: 0 auto; }
+
+        header {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        h1 { color: #667eea; font-size: 1.8em; }
+
+        .back-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .back-link:hover { text-decoration: underline; }
+
+        .header-right {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .role-badge {
+            background: #667eea;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+        }
+
+        .panel {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .search-box {
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            width: 300px;
+            font-size: 1em;
+        }
+
+        .search-box:focus { outline: none; border-color: #667eea; }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 0.95em;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        button:hover { background: #5568d3; transform: translateY(-1px); }
+
+        .btn-danger { background: #dc3545; }
+        .btn-danger:hover { background: #c82333; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+
+        th, td {
+            padding: 14px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        th { background: #f8f9fa; font-weight: 600; }
+        tr:hover { background: #f8f9fa; }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .action-btns { display: flex; gap: 8px; }
+        .btn-small { padding: 6px 14px; font-size: 0.85em; }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            margin: 50px auto;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 550px;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        .close {
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .close:hover { color: #333; }
+
+        .form-group { margin-bottom: 18px; }
+        label { display: block; margin-bottom: 6px; font-weight: 600; color: #333; }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+
+        input:focus, textarea:focus { outline: none; border-color: #667eea; }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .alert-success { background: #d4edda; color: #155724; }
+        .alert-error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div>
+                <a href="dashboard.html" class="back-link">← Back to Dashboard</a>
+                <h1 style="margin-top: 8px;">👥 Customer Management</h1>
+            </div>
+            <div class="header-right">
+                <span>👤 <span id="userName"></span> <span id="userRoleBadge" class="role-badge"></span></span>
+                <button onclick="logout()" style="background: #dc3545;">Logout</button>
+            </div>
+        </header>
+
+        <div class="panel">
+            <div class="alert alert-success" id="alertSuccess"></div>
+            <div class="alert alert-error" id="alertError"></div>
+
+            <div class="panel-header">
+                <input type="text" class="search-box" id="searchBox" placeholder="🔍 Search by name, company, or code..." oninput="filterCustomers()">
+                <button onclick="openCustomerModal()">+ Add Customer</button>
+            </div>
+
+            <table id="customersTable">
+                <thead>
+                    <tr>
+                        <th>Customer Code</th>
+                        <th>Customer / Company</th>
+                        <th>Contact Person</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="customersBody"></tbody>
+            </table>
+            <div class="empty-state" id="emptyState" style="display: none;">
+                No customers found. Click "+ Add Customer" to add one.
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer Modal -->
+    <div id="customerModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeCustomerModal()">&times;</span>
+            <h2 id="modalTitle">Add Customer</h2>
+            <form id="customerForm" style="margin-top: 20px;">
+                <input type="hidden" id="customerId">
+                <div class="form-group">
+                    <label>Customer Code *</label>
+                    <input type="text" id="customerCode" placeholder="e.g., REL-MUM-004" required>
+                </div>
+                <div class="form-group">
+                    <label>Customer / Company Name *</label>
+                    <input type="text" id="customerName" required>
+                </div>
+                <div class="form-group">
+                    <label>Company Name</label>
+                    <input type="text" id="companyName">
+                </div>
+                <div class="form-group">
+                    <label>Contact Person</label>
+                    <input type="text" id="contactPerson">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="customerEmail">
+                </div>
+                <div class="form-group">
+                    <label>Phone</label>
+                    <input type="text" id="customerPhone">
+                </div>
+                <div class="form-group">
+                    <label>Address</label>
+                    <textarea id="customerAddress" rows="2"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="customerNotes" rows="2"></textarea>
+                </div>
+                <button type="submit">Save Customer</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000/api';
+        // Add this near the top of every page's <script> section
+        function authfetch(url, options = {}) {
+            const token = localStorage.getItem('token');
+            return fetch(url, {
+                ...options,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                    ...(options.headers || {})
+                }
+            });
+        }
+        let allCustomers = [];
+
+        // Auth check
+        if (localStorage.getItem('isLoggedIn') !== 'true') {
+            window.location.href = 'login.html';
+        }
+
+        const userRole = localStorage.getItem('userRole');
+        const userId = localStorage.getItem('userId');
+        document.getElementById('userName').textContent = localStorage.getItem('userName') || '';
+        const badge = document.getElementById('userRoleBadge');
+        badge.textContent = (userRole || '').toUpperCase();
+        if (userRole === 'admin') badge.style.background = '#dc3545';
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+
+        async function loadCustomers() {
+        try {
+            const res = await authfetch(`${API_URL}/customers`);
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                console.error("Backend error:", data);
+                throw new Error(data.error || data.message || "Failed to load customers");
+            }
+
+            allCustomers = data;
+            renderCustomers(allCustomers);
+
+        } catch (err) {
+            console.error("Load customers error:", err);
+            showAlert('alertError', err.message);
+        }
+    }
+
+        function renderCustomers(list) {
+            const tbody = document.getElementById('customersBody');
+            const emptyState = document.getElementById('emptyState');
+
+            if (list.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+            emptyState.style.display = 'none';
+
+            tbody.innerHTML = list.map(c => `
+                <tr>
+                    <td>${c.customer_code || '-'}</td>
+                    <td><strong>${c.customer_name}</strong>${c.company_name ? '<br><span style="color:#888; font-size:0.9em;">' + c.company_name + '</span>' : ''}</td>
+                    <td>${c.contact_person || '-'}</td>
+                    <td>${c.email || '-'}</td>
+                    <td>${c.phone || '-'}</td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="btn-small" onclick='editCustomer(${c.id})'>Edit</button>
+                            ${userRole === 'admin' ? `<button class="btn-small btn-danger" onclick="deleteCustomer(${c.id})">Delete</button>` : ''}
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function filterCustomers() {
+            const term = document.getElementById('searchBox').value.toLowerCase();
+            const filtered = allCustomers.filter(c =>
+                c.customer_name?.toLowerCase().includes(term) ||
+                c.company_name?.toLowerCase().includes(term) ||
+                c.customer_code?.toLowerCase().includes(term)
+            );
+            renderCustomers(filtered);
+        }
+
+        function openCustomerModal() {
+            document.getElementById('modalTitle').textContent = 'Add Customer';
+            document.getElementById('customerForm').reset();
+            document.getElementById('customerId').value = '';
+            document.getElementById('customerModal').style.display = 'block';
+        }
+
+        function closeCustomerModal() {
+            document.getElementById('customerModal').style.display = 'none';
+        }
+
+        function editCustomer(id) {
+            const c = allCustomers.find(x => x.id === id);
+            if (!c) return;
+            document.getElementById('modalTitle').textContent = 'Edit Customer';
+            document.getElementById('customerId').value = c.id;
+            document.getElementById('customerCode').value = c.customer_code || '';
+            document.getElementById('customerName').value = c.customer_name || '';
+            document.getElementById('companyName').value = c.company_name || '';
+            document.getElementById('contactPerson').value = c.contact_person || '';
+            document.getElementById('customerEmail').value = c.email || '';
+            document.getElementById('customerPhone').value = c.phone || '';
+            document.getElementById('customerAddress').value = c.address || '';
+            document.getElementById('customerNotes').value = c.notes || '';
+            document.getElementById('customerModal').style.display = 'block';
+        }
+
+        async function deleteCustomer(id) {
+            if (userRole !== 'admin') {
+                showAlert('alertError', 'Only admin can delete customers');
+                return;
+            }
+            if (!confirm('Delete this customer? This cannot be undone.')) return;
+
+            try {
+                const res = await authfetch(`${API_URL}/customers/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    showAlert('alertSuccess', 'Customer deleted successfully');
+                    loadCustomers();
+                } else {
+                    showAlert('alertError', 'Failed to delete customer');
+                }
+            } catch (err) {
+                showAlert('alertError', 'Connection error');
+            }
+        }
+
+        document.getElementById('customerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('customerId').value;
+
+            const data = {
+                customer_code: document.getElementById('customerCode').value,
+                customer_name: document.getElementById('customerName').value,
+                company_name: document.getElementById('companyName').value,
+                contact_person: document.getElementById('contactPerson').value,
+                email: document.getElementById('customerEmail').value,
+                phone: document.getElementById('customerPhone').value,
+                address: document.getElementById('customerAddress').value,
+                notes: document.getElementById('customerNotes').value,
+                created_by: userId
+            };
+
+            try {
+                const url = id ? `${API_URL}/customers/${id}` : `${API_URL}/customers`;
+                const method = id ? 'PUT' : 'POST';
+
+                const res = await authfetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (res.ok) {
+                    closeCustomerModal();
+                    showAlert('alertSuccess', id ? 'Customer updated successfully' : 'Customer added successfully');
+                    loadCustomers();
+                } else {
+                    const err = await res.json();
+                    showAlert('alertError', err.error || 'Failed to save customer');
+                }
+            } catch (err) {
+                showAlert('alertError', 'Connection error');
+            }
+        });
+
+        function showAlert(id, message) {
+            const el = document.getElementById(id);
+            el.textContent = message;
+            el.style.display = 'block';
+            setTimeout(() => el.style.display = 'none', 3000);
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(e) {
+            const modal = document.getElementById('customerModal');
+            if (e.target === modal) closeCustomerModal();
+        };
+
+        loadCustomers();
+    </script>
+</body>
+</html>
