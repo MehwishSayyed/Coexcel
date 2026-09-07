@@ -635,13 +635,6 @@ app.delete('/api/users/:id', authenticateToken, requireAdmin, async (req, res) =
 
 // Get all customers
 app.get('/api/customers', authenticateToken,
-     requireActive,
-    validate([
-        body('customer_name').notEmpty().trim().withMessage('Customer name is required'),
-        body('customer_code').notEmpty().trim().withMessage('Customer code is required'),
-        body('email').optional().isEmail().withMessage('Invalid email format'),
-        body('phone').optional().trim().isLength({ max: 20 }).withMessage('Phone number too long'),
-    ]),
     async (req, res) => {
     try {
         const { data, error } = await supabase

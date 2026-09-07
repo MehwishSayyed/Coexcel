@@ -289,15 +289,24 @@
         }
 
         async function loadCustomers() {
-            try {
-                const res = await authfetch(`${API_URL}/customers`);
-                allCustomers = await res.json();
-                renderCustomers(allCustomers);
-            } catch (err) {
-                showAlert('alertError', 'Failed to load customers. Is the server running?');
-                console.error(err);
+        try {
+            const res = await authfetch(`${API_URL}/customers`);
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                console.error("Backend error:", data);
+                throw new Error(data.error || data.message || "Failed to load customers");
             }
+
+            allCustomers = data;
+            renderCustomers(allCustomers);
+
+        } catch (err) {
+            console.error("Load customers error:", err);
+            showAlert('alertError', err.message);
         }
+    }
 
         function renderCustomers(list) {
             const tbody = document.getElementById('customersBody');
