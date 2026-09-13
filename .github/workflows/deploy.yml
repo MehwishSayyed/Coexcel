@@ -1,0 +1,58 @@
+name: Coexcel CD
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  AWS_REGION: eu-north-1
+  S3_BUCKET: coexcel-frontend-sania-2026
+
+jobs:
+
+  # ==========================================
+  # FRONTEND → AWS S3
+  # ==========================================
+  deploy-frontend:
+    name: Deploy Frontend to S3
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy frontend to S3
+        run: |
+          aws s3 sync . s3://${{ env.S3_BUCKET }} \
+            --exclude "*" \
+            --include "*.html"
+
+  # ==========================================
+  # BACKEND → AWS EC2
+  # ==========================================
+  deploy-backend:
+    name: Deploy Backend to EC2
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy backend through SSH
+        uses: appleboy/ssh-action@v1.2.5
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /home/ubuntu/Coexcel
+            git pull origin main
+            cd backend
+            npm ci
+            pm2 restart Coexcel-ems --update-env
+            pm2 status
