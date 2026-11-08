@@ -2,7 +2,7 @@
 
 A full-stack web application for a Customer Relationship Center (CRC) team handling Reliance customer care. It keeps equipment inventory, machine repairs and customer records in one system, with separate access for an Admin and for Employees.
 
-**Live demo:** `https://<dx6vqdeeu5th3.cloudfront.net>`
+**Live demo:** `https://dx6vqdeeu5th3.cloudfront.net`
 
 ## The problem
 
@@ -313,7 +313,7 @@ Each team member works through their own IAM user, limited to the AWS service th
 
 | Name | Responsibility |
 |---|---|
-| [Sayyed Mehwish] | Full-stack development, database, EC2 deployment |
-| [Sania Biaragdar] | Frontend hosting on S3 |
-| [Hafiza Patel] | CI/CD pipeline |
+| Sayyed Mehwish | Full-stack development, database, EC2 deployment |
+| Sania Biaragdar | Frontend hosting on S3 |
+| Hafiza Patel | CI/CD pipeline |
 
