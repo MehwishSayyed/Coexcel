@@ -499,8 +499,6 @@ app.post('/api/auth/login', async (req, res) => {
 
 // Create new employee (Admin only)
 app.post('/api/auth/signup',
-   const { name, email, password } = req.body;
-   const created_by = req.user.userId;
      validate([
         body('name').notEmpty().trim().withMessage('Name is required'),
         body('email').isEmail().withMessage('Valid email is required'),
